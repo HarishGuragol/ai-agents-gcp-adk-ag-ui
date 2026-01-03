@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AG-UI Console Chat</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #020617;
+      padding: 15px;
+      border-radius: 8px;
+      height: 60vh;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    input {
+      width: 80%;
+      padding: 8px;
+    }
+    button {
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>AG-UI Streaming Chat (Console UI)</h2>
+
+<div id="log"></div>
+
+<input id="query" placeholder="Ask something…" />
+<button onclick="send()">Send</button>
+
+<script>
+
+let buffer = "";
+
+function send() {
+ const query = document.getElementById("q").value;
+ const out = document.getElementById("out");
+ out.textContent = "Fetch streaming...\n\n";
+
+  fetch(`/chat?query=${encodeURIComponent(query)}`)
+    .then(res => {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      function read() {
+        reader.read().then(({ done, value }) => {
+          if (done) return;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          // 🔑 AG-UI events are separated by blank lines
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop(); // keep incomplete chunk
+
+          parts.forEach(part => {
+            part = part.trim();
+            if (!part) return;
+
+            try {
+              const event = JSON.parse(part);
+
+              if (event.type === "TEXT_MESSAGE_CONTENT") {
+                out.textContent += event.delta;
+              }
+            } catch (e) {
+              console.warn("Skipping partial JSON", part);
+            }
+          });
+
+          read();
+        });
+      }
+
+      read();
+    });
+}
+</script>
+
+
+</body>
+</html>
