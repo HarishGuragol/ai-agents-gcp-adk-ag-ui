@@ -7,7 +7,7 @@ async def orchestrate(query: str):
     state = {"query": query}
     result = agent_graph.invoke(state)
 
-    if result.get("agent_type") == "ops":
+    if result["agent_type"] == "ops":
         for event in run_ops_agent(result):
             yield event
 
