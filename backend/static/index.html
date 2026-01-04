@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AG-UI Streaming Chat</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0f0f0f;
+      color: #00ffcc;
+      padding: 20px;
+    }
+    #log {
+      white-space: pre-wrap;
+      border: 1px solid #333;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+    }
+    input {
+      width: 80%;
+      padding: 8px;
+    }
+    button {
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>AG-UI Streaming Chat</h2>
+
+<div id="log"></div>
+<br/>
+
+<input id="query" placeholder="Type message..." />
+<button onclick="send()">Send</button>
+
+<script>
+let es;
+
+function send() {
+  const q = document.getElementById("query").value;
+  const log = document.getElementById("log");
+
+  if (es) es.close();
+  log.innerText = "🔗 Connecting...\n";
+
+  es = new EventSource(`/chat?query=${encodeURIComponent(q)}`);
+
+  es.onmessage = (e) => {
+    const evt = JSON.parse(e.data);
+    log.innerText += JSON.stringify(evt, null, 2) + "\n\n";
+    log.scrollTop = log.scrollHeight;
+  };
+
+  es.onerror = () => {
+    log.innerText += "\n❌ Stream closed\n";
+    es.close();
+  };
+}
+</script>
+
+</body>
+</html>

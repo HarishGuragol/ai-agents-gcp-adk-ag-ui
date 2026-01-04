@@ -1,6 +1,5 @@
-from google.adk import Agent
+# agents/research_agent.py
 
-research_agent = Agent(
-    name="research_agent"
-)
-
+def run_research_agent(prompt: str) -> str:
+    # temporary stub (later this can call google.adk.Agent)
+    return f"[OPS AGENT RESPONSE] {prompt}"

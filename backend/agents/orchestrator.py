@@ -1,21 +1,14 @@
-from agents.ops_agent import ops_agent
+from agents.graph import agent_graph
+from agents.ops_agent import run_ops_agent
 
+async def orchestrate(query: str):
+    yield {"type": "RUN_STARTED"}
 
-def orchestrate(query: str) -> str:
-    q = query.lower()
+    state = {"query": query}
+    result = agent_graph.invoke(state)
 
-    # Ops agent path
-    if any(k in q for k in ["gcp", "cloud run", "deploy", "scaling", "infra"]):
-        return (
-            "Cloud Run automatically scales by creating and terminating "
-            "container instances based on incoming HTTP requests. "
-            "It uses request concurrency and CPU utilization to decide "
-            "when to scale up or down, and can scale to zero when idle."
-        )
+    if result.get("agent_type") == "ops":
+        for event in run_ops_agent(result):
+            yield event
 
-    # Research agent path
-    return (
-        "A transformer is a neural network architecture that uses "
-        "self-attention instead of recurrence or convolution. "
-        "It processes tokens in parallel and models long-range dependencies efficiently."
-    )
+    yield {"type": "RUN_FINISHED"}
